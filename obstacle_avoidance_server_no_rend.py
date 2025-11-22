@@ -20,21 +20,35 @@ while True:
 
     height, width = frame.shape[:2]
 
-    # --- Define trapezoid region ---
+    # # --- Define trapezoid region ---
+    # pts = np.array([
+    #     [int(width * 0.7), int(height * 0.66)],  # top-right
+    #     [int(width * 0.3), int(height * 0.66)],  # top-left
+    #     [0, height],                             # bottom-left
+    #     [width, height]                          # bottom-right
+    # ], np.int32)
+    # pts = pts.reshape((-1, 1, 2))
+
+    # ----------------- Define trapezoid (bottom 1/5) -----------------
+    top_y = int(height * 0.83)   # start trapezoid at 80% of frame height
+
     pts = np.array([
-        [int(width * 0.7), int(height * 0.66)],  # top-right
-        [int(width * 0.3), int(height * 0.66)],  # top-left
-        [0, height],                             # bottom-left
-        [width, height]                          # bottom-right
+        [int(width * 0.7), top_y],   # top-right
+        [int(width * 0.3), top_y],   # top-left
+        [0, height],                 # bottom-left
+        [width, height]              # bottom-right
     ], np.int32)
+
     pts = pts.reshape((-1, 1, 2))
 
+
+    # Create trapezoid mask
     trapezoid_mask = np.zeros((height, width), dtype=np.uint8)
     cv2.fillPoly(trapezoid_mask, [pts], 255)
 
-    # --- Threshold for obstacle segmentation ---
+    # ----------------- Grayscale and threshold -----------------
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
 
     # --- Find contours ---
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

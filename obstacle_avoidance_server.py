@@ -20,14 +20,27 @@ while True:
 
     height, width = frame.shape[:2]
 
-    # ----------------- Define trapezoid -----------------
+    # # ----------------- Define trapezoid -----------------
+    # pts = np.array([
+    #     [int(width * 0.7), int(height * 0.66)],  # top-right
+    #     [int(width * 0.3), int(height * 0.66)],  # top-left
+    #     [0, height],                             # bottom-left
+    #     [width, height]                          # bottom-right
+    # ], np.int32)
+    # pts = pts.reshape((-1, 1, 2))
+
+    # ----------------- Define trapezoid (bottom 1/5) -----------------
+    top_y = int(height * 0.83)   # start trapezoid at 80% of frame height
+
     pts = np.array([
-        [int(width * 0.7), int(height * 0.66)],  # top-right
-        [int(width * 0.3), int(height * 0.66)],  # top-left
-        [0, height],                             # bottom-left
-        [width, height]                          # bottom-right
+        [int(width * 0.7), top_y],   # top-right
+        [int(width * 0.3), top_y],   # top-left
+        [0, height],                 # bottom-left
+        [width, height]              # bottom-right
     ], np.int32)
+
     pts = pts.reshape((-1, 1, 2))
+
 
     # Create trapezoid mask
     trapezoid_mask = np.zeros((height, width), dtype=np.uint8)
@@ -35,7 +48,35 @@ while True:
 
     # ----------------- Grayscale and threshold -----------------
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY)
+    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+
+    # ----------- Highlight Reduction + Enhancement -----------
+
+    # # (1) Gamma correction (compress highlights)
+    # gamma = 1.4  # try 1.3–1.6
+    # invGamma = 1.0 / gamma
+    # table = (np.arange(256) / 255.0) ** invGamma * 255
+    # table = np.uint8(table)
+    # gray = cv2.LUT(gray, table)
+
+    # # (2) Low-contrast CLAHE (prevents highlight blowout)
+    # clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8))
+    # gray = clahe.apply(gray)
+
+    # # (3) Light sharpening (optional!)
+    # kernel_sharpen = np.array([
+    #     [0, -1, 0],
+    #     [-1, 4.5, -1],   # reduced from 5 → 4.5
+    #     [0, -1, 0]
+    # ])
+    # gray = cv2.filter2D(gray, -1, kernel_sharpen)
+
+    # _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+
+
+
+    # ---------------------------------------------------------
+
 
     # ----------------- Find contours -----------------
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
